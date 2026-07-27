@@ -1,0 +1,5 @@
+Ariadne:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-change-me-in-production-8f3a9c2e1b7d4f6a0c8e2b5d9f1a3c7e}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}

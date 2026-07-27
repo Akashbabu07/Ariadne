@@ -55,7 +55,7 @@ defines the contract, every service's controllers use it, no drift.
 ```json
 {
   "success": true,
-  "data": { ... },
+  "data": { },
   "meta": {
     "correlationId": "uuid",
     "timestamp": "2026-07-25T10:15:30Z"
@@ -101,7 +101,7 @@ actually be large. Offset pagination is acceptable only for genuinely small, bou
 
 ```json
 {
-  "data": [ ... ],
+  "data": [ ],
   "meta": {
     "nextCursor": "opaque-string-or-null",
     "hasMore": true
