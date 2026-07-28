@@ -1,4 +1,4 @@
-package com.Ariadne.ingestion_service;
+package com.Ariadne.ingestion;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
