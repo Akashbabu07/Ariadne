@@ -6,12 +6,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.atlas</groupId>
+    <groupId>com.Ariadne</groupId>
     <artifactId>backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>ATLAS Backend</name>
+    <name>Ariadne Backend</name>
     <description>Parent Maven Project for ATLAS AI Engineering Intelligence Platform</description>
 
     <!-- ===================================================== -->
