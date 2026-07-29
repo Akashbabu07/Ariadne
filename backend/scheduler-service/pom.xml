@@ -8,7 +8,7 @@
 		<version>4.0.7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.atlas</groupId>
+	<groupId>com.Ariadne</groupId>
 	<artifactId>scheduler-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>scheduler-service</name>

@@ -66,7 +66,7 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
                     .mutate()
                     .header("X-User-Id", claims.getSubject())
                     .header("X-Org-Id", String.valueOf(claims.get("orgId")))
-                    .header("X-User-Roles", String.join(",", (java.util.List<String>) claims.get("roles")))
+                    .header("X-User-Roles", String.join(",", (List<String>) claims.get("roles")))
                     .build();
 
             return chain.filter(

@@ -92,7 +92,7 @@
 
         <module>graph-service</module>
 
-        <module>ai-orchestrator</module>
+        <module>ai-gateway</module>
 
         <module>integration-service</module>
 
