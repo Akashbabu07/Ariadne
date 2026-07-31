@@ -24,4 +24,5 @@ message ParsedFile {
   string path = 1;
   string language = 2;
   int32 line_count = 3;
+  repeated string imports = 4;
 }

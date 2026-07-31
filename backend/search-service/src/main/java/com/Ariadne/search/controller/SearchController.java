@@ -20,4 +20,9 @@ public class SearchController {
     public ResponseEntity<ApiResponse<List<SearchResultResponse>>> search(@RequestParam String q) {
         return ResponseEntity.ok(ApiResponse.success(searchService.keywordSearch(q)));
     }
+
+    @GetMapping("/semantic")
+    public ResponseEntity<ApiResponse<List<SearchResultResponse>>> semanticSearch(@RequestParam String q) {
+        return ResponseEntity.ok(ApiResponse.success(searchService.semanticSearch(q)));
+    }
 }

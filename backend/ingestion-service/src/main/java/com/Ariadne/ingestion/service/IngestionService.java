@@ -1,5 +1,6 @@
 package com.Ariadne.ingestion.service;
 
+import com.Ariadne.ingestion.client.ProjectServiceClient;
 import com.Ariadne.ingestion.dto.*;
 import com.Ariadne.ingestion.entity.*;
 import com.Ariadne.ingestion.repository.IngestionJobRepository;
@@ -21,6 +22,7 @@ public class IngestionService {
 
     private final IngestionJobRepository jobRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ProjectServiceClient projectServiceClient;
 
     @Transactional
     public IngestionJobResponse startIngestion(StartIngestionRequest request) {
@@ -31,6 +33,8 @@ public class IngestionService {
                 .build();
         job = jobRepository.save(job);
         publishEvent(job);
+
+        projectServiceClient.markSynced(job.getRepositoryId(), "SYNCED");
 
         return toResponse(job);
     }

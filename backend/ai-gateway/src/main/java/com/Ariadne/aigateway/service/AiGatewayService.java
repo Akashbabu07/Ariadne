@@ -17,7 +17,10 @@ public class AiGatewayService {
         return new ParseResultResponse(
                 response.getRepositoryId(),
                 response.getFilesParsed(),
-                response.getFilesList().stream().map(f -> f.getPath()).toList()
+                response.getFilesList().stream()
+                        .map(f -> new ParseResultResponse.ParsedFile(
+                                f.getPath(), f.getLanguage(), f.getLineCount(), f.getImportsList()))
+                        .toList()
         );
     }
 }

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package Ariadne.embedding;
+
+option java_package = "com.Ariadne.grpc.embedding";
+option java_multiple_files = true;
+
+service EmbeddingService {
+  rpc Embed (EmbedRequest) returns (EmbedResponse);
+}
+
+message EmbedRequest {
+  string text = 1;
+}
+
+message EmbedResponse {
+  repeated float vector = 1;
+  int32 dimensions = 2;
+}

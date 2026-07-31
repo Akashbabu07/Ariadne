@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -72,6 +74,31 @@ public class ProjectService {
         return repositoryRepository.findByProjectId(projectId).stream()
                 .map(this::toRepoResponse)
                 .toList();
+    }
+
+    // Real cross-project query, used by scheduler-service to find repos due for
+    // re-sync. SYNCING is excluded so an in-progress ingestion isn't re-triggered
+    // on top of itself.
+    public List<RepositoryResponse> listStaleRepositories(Duration staleThreshold) {
+        Instant cutoff = Instant.now().minus(staleThreshold);
+        return repositoryRepository
+                .findBySyncStatusNotAndLastSyncedAtBeforeOrLastSyncedAtIsNull(SyncStatus.SYNCING, cutoff)
+                .stream()
+                .map(this::toRepoResponse)
+                .toList();
+    }
+
+    // Called by ingestion-service after a sync completes. Without this, stale-repo
+    // detection would re-trigger the same repositories forever, since lastSyncedAt
+    // would never advance.
+    @Transactional
+    public RepositoryResponse markRepositorySynced(UUID repositoryId, SyncStatus status) {
+        Repository repo = repositoryRepository.findById(repositoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
+        repo.setSyncStatus(status);
+        repo.setLastSyncedAt(Instant.now());
+        repo = repositoryRepository.save(repo);
+        return toRepoResponse(repo);
     }
 
     @Transactional

@@ -1,6 +1,8 @@
 spring:
   application:
     name: ai-gateway
+  kafka:
+    bootstrap-servers: localhost:9092
 
 server:
   port: 8090
@@ -11,8 +13,16 @@ grpc:
       address: static://localhost:50051
       negotiation-type: plaintext
 
+services:
+  graph-service:
+    url: http://localhost:8085
+
 management:
   endpoints:
     web:
       exposure:
-        include: health, info
+        include: health, info, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
