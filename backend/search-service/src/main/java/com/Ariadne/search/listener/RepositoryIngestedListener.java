@@ -3,14 +3,17 @@ package com.Ariadne.search.listener;
 import com.Ariadne.search.client.EmbeddingClient;
 import com.Ariadne.search.entity.SearchDocument;
 import com.Ariadne.search.repository.SearchDocumentRepository;
+import com.Ariadne.shared.events.EmbeddingsGeneratedEvent;
 import com.Ariadne.shared.events.RepositoryIngestedEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,9 +22,11 @@ import java.util.stream.Collectors;
 public class RepositoryIngestedListener {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryIngestedListener.class);
+    private static final String EMBEDDINGS_TOPIC = "repository.embeddings-generated";
 
     private final SearchDocumentRepository documentRepository;
     private final EmbeddingClient embeddingClient;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @KafkaListener(topics = "repository.ingested", groupId = "search-service")
     @Transactional
@@ -43,6 +48,9 @@ public class RepositoryIngestedListener {
             List<Float> vector = embeddingClient.embed(event.gitUrl());
             documentRepository.updateEmbedding(doc.getId(), toVectorLiteral(vector));
             log.info("Generated embedding for repository {}", event.repositoryId());
+
+            kafkaTemplate.send(EMBEDDINGS_TOPIC, event.repositoryId().toString(),
+                    new EmbeddingsGeneratedEvent(event.repositoryId(), vector.size(), Instant.now()));
         } catch (Exception e) {
             log.warn("Failed to generate embedding for repository {}: {}", event.repositoryId(), e.getMessage());
         }

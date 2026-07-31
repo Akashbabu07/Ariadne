@@ -29,7 +29,7 @@ public class GraphServiceClient {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void pushParsedFiles(String repositoryId, String gitUrl, ParseResponse parseResult) {
+    public int pushParsedFiles(String repositoryId, String gitUrl, ParseResponse parseResult) {
         restClient.post()
                 .uri(graphServiceUrl + "/api/v1/graph/repositories")
                 .body(Map.of("repositoryId", repositoryId, "gitUrl", gitUrl))
@@ -52,5 +52,6 @@ public class GraphServiceClient {
 
         kafkaTemplate.send("graph.updated", repositoryId,
                 new GraphUpdatedEvent(UUID.fromString(repositoryId), parseResult.getFilesCount(), Instant.now()));
+        return 0;
     }
 }
