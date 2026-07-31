@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,5 +61,17 @@ public class ProjectController {
     @GetMapping("/organizations/{orgId}/members")
     public ResponseEntity<ApiResponse<List<MemberResponse>>> listMembers(@PathVariable UUID orgId) {
         return ResponseEntity.ok(ApiResponse.success(projectService.listMembersByOrg(orgId)));
+    }
+
+    @GetMapping("/repositories/stale")
+    public ResponseEntity<ApiResponse<List<RepositoryResponse>>> getStaleRepositories(
+            @RequestParam(defaultValue = "60") long minutes) {
+        return ResponseEntity.ok(ApiResponse.success(projectService.listStaleRepositories(Duration.ofMinutes(minutes))));
+    }
+
+    @PatchMapping("/repositories/{repositoryId}/sync-status")
+    public ResponseEntity<ApiResponse<RepositoryResponse>> markSynced(
+            @PathVariable UUID repositoryId, @RequestParam com.Ariadne.project.entity.SyncStatus status) {
+        return ResponseEntity.ok(ApiResponse.success(projectService.markRepositorySynced(repositoryId, status)));
     }
 }

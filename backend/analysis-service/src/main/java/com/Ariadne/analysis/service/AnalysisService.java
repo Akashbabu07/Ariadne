@@ -20,7 +20,7 @@ public class AnalysisService {
 
     @Transactional
     public AnalysisReportResponse runBasicAnalysis(UUID repositoryId) {
-        RepositoryGraphResponse graph = graphServiceClient.getRepositoryGraph(repositoryId.toString());
+        RepositoryGraphResponse graph = graphServiceClient.getRepositoryGraph(repositoryId.toString()).data();
 
         AnalysisReport report = AnalysisReport.builder()
                 .repositoryId(repositoryId)

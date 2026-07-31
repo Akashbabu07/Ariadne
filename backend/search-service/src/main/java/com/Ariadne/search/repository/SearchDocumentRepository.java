@@ -2,6 +2,7 @@ package com.Ariadne.search.repository;
 
 import com.Ariadne.search.entity.SearchDocument;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,4 +20,18 @@ public interface SearchDocumentRepository extends JpaRepository<SearchDocument, 
         LIMIT 20
         """, nativeQuery = true)
     List<SearchDocument> searchByKeyword(@Param("query") String query);
+
+
+    @Modifying
+    @Query(value = "UPDATE search.search_documents SET embedding = CAST(:vector AS vector) WHERE id = :id",
+            nativeQuery = true)
+    void updateEmbedding(@Param("id") UUID id, @Param("vector") String vectorLiteral);
+
+    @Query(value = """
+        SELECT * FROM search.search_documents
+        WHERE embedding IS NOT NULL
+        ORDER BY embedding <=> CAST(:vector AS vector)
+        LIMIT 20
+        """, nativeQuery = true)
+    List<SearchDocument> searchByEmbedding(@Param("vector") String queryVectorLiteral);
 }

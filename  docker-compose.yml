@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: atlas-postgres
     restart: unless-stopped
     env_file: .env
@@ -19,7 +19,14 @@ services:
       timeout: 5s
       retries: 5
 
-  Kafka:
+  redis:
+    image: redis:7-alpine
+    container_name: atlas-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  kafka:
     image: apache/kafka:3.9.0
     container_name: atlas-kafka
     restart: unless-stopped
@@ -44,10 +51,34 @@ services:
     environment:
       NEO4J_AUTH: neo4j/atlas_dev_password
     ports:
-      - "7474:7474"   # browser UI
-      - "7687:7687"   # bolt protocol
+      - "7474:7474"
+      - "7687:7687"
     volumes:
       - atlas_neo4j_data:/data
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: atlas-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: atlas-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: atlas_dev_password
+    volumes:
+      - atlas_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
 networks:
   default:
@@ -55,5 +86,7 @@ networks:
 
 volumes:
   atlas_postgres_data:
+  atlas_neo4j_data:
+  atlas_grafana_data:
 
 

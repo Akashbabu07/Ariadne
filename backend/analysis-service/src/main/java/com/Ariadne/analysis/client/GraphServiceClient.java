@@ -1,6 +1,7 @@
 package com.Ariadne.analysis.client;
 
 import com.Ariadne.analysis.dto.RepositoryGraphResponse;
+import com.Ariadne.shared.response.ApiEnvelope;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,5 +10,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface GraphServiceClient {
 
     @GetMapping("/api/v1/graph/repositories/{repositoryId}")
-    RepositoryGraphResponse getRepositoryGraph(@PathVariable("repositoryId") String repositoryId);
+    ApiEnvelope<RepositoryGraphResponse> getRepositoryGraph(@PathVariable("repositoryId") String repositoryId);
 }

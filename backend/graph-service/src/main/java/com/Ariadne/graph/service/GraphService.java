@@ -3,17 +3,21 @@ package com.Ariadne.graph.service;
 import com.Ariadne.graph.dto.*;
 import com.Ariadne.graph.node.FileNode;
 import com.Ariadne.graph.node.RepositoryNode;
+import com.Ariadne.graph.repository.FileNodeRepository;
 import com.Ariadne.graph.repository.RepositoryNodeRepository;
 import com.Ariadne.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GraphService {
 
     private final RepositoryNodeRepository repositoryNodeRepository;
+    private final FileNodeRepository fileNodeRepository;
 
     @Transactional
     public RepositoryGraphResponse createRepositoryNode(CreateRepositoryNodeRequest request) {
@@ -43,11 +47,75 @@ public class GraphService {
         return toResponse(node);
     }
 
+
+    @Transactional
+    public void addDependency(String repositoryId, AddDependencyRequest request) {
+        fileNodeRepository.findByRepositoryIdAndPath(repositoryId, request.fromPath())
+                .orElseThrow(() -> new ResourceNotFoundException("File not found: " + request.fromPath()));
+        fileNodeRepository.findByRepositoryIdAndPath(repositoryId, request.toPath())
+                .orElseThrow(() -> new ResourceNotFoundException("File not found: " + request.toPath()));
+        fileNodeRepository.addDependency(repositoryId, request.fromPath(), request.toPath());
+    }
+
+    public List<RepositoryGraphResponse.FileResponse> getDependencies(String repositoryId, String path) {
+        return fileNodeRepository.findDependencies(repositoryId, path).stream()
+                .map(this::toFileResponse)
+                .toList();
+    }
+
+    public List<RepositoryGraphResponse.FileResponse> getDependents(String repositoryId, String path) {
+        return fileNodeRepository.findDependents(repositoryId, path).stream()
+                .map(this::toFileResponse)
+                .toList();
+    }
+
+
+    @Transactional
+    public RepositoryGraphResponse ingestParsedFiles(String repositoryId, IngestParsedFilesRequest request) {
+        RepositoryNode node = repositoryNodeRepository.findById(repositoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository node not found in graph"));
+
+        for (IngestParsedFilesRequest.ParsedFileEntry entry : request.files()) {
+            boolean exists = node.getFiles().stream().anyMatch(f -> f.getPath().equals(entry.path()));
+            if (!exists) {
+                node.getFiles().add(FileNode.builder().path(entry.path()).language(entry.language()).build());
+            }
+        }
+        repositoryNodeRepository.save(node);
+
+        for (IngestParsedFilesRequest.ParsedFileEntry entry : request.files()) {
+            if (entry.imports() == null) continue;
+            for (String rawImport : entry.imports()) {
+                String lastSegment = lastSegment(rawImport);
+                if (lastSegment.isBlank()) continue;
+
+                fileNodeRepository.findByRepositoryIdAndPathSuffix(repositoryId, lastSegment)
+                        .ifPresent(target -> {
+                            if (!target.getPath().equals(entry.path())) {
+                                fileNodeRepository.addDependency(repositoryId, entry.path(), target.getPath());
+                            }
+                        });
+            }
+        }
+
+        return getRepositoryGraph(repositoryId);
+    }
+
+    private String lastSegment(String rawImport) {
+        String cleaned = rawImport.replace("./", "").replace("../", "");
+        String[] parts = cleaned.split("[./]");
+        return parts.length == 0 ? "" : parts[parts.length - 1];
+    }
+
+    private RepositoryGraphResponse.FileResponse toFileResponse(FileNode f) {
+        return new RepositoryGraphResponse.FileResponse(f.getId(), f.getPath(), f.getLanguage());
+    }
+
     private RepositoryGraphResponse toResponse(RepositoryNode node) {
         return new RepositoryGraphResponse(
                 node.getId(), node.getGitUrl(),
                 node.getFiles().stream()
-                        .map(f -> new RepositoryGraphResponse.FileResponse(f.getId(), f.getPath(), f.getLanguage()))
+                        .map(this::toFileResponse)
                         .toList()
         );
     }

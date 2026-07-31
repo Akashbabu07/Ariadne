@@ -1,9 +1,11 @@
 package com.Ariadne.scheduler.client;
 
 import com.Ariadne.scheduler.dto.RepositoryResponse;
+import com.Ariadne.shared.response.ApiEnvelope;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -11,5 +13,8 @@ import java.util.List;
 public interface ProjectServiceClient {
 
     @GetMapping("/api/v1/projects/{projectId}/repositories")
-    List<RepositoryResponse> listRepositories(@PathVariable("projectId") String projectId);
+    ApiEnvelope<List<RepositoryResponse>> listRepositories(@PathVariable("projectId") String projectId);
+
+    @GetMapping("/api/v1/repositories/stale")
+    ApiEnvelope<List<RepositoryResponse>> listStale(@RequestParam("minutes") long minutes);
 }

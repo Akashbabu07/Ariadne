@@ -30,4 +30,28 @@ public class GraphController {
     public ResponseEntity<ApiResponse<RepositoryGraphResponse>> getGraph(@PathVariable String repositoryId) {
         return ResponseEntity.ok(ApiResponse.success(graphService.getRepositoryGraph(repositoryId)));
     }
+
+    @PostMapping("/repositories/{repositoryId}/dependencies")
+    public ResponseEntity<ApiResponse<Void>> addDependency(@PathVariable String repositoryId, @Valid @RequestBody AddDependencyRequest request) {
+        graphService.addDependency(repositoryId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+    }
+
+    @GetMapping("/repositories/{repositoryId}/dependencies")
+    public ResponseEntity<ApiResponse<java.util.List<RepositoryGraphResponse.FileResponse>>> getDependencies(
+            @PathVariable String repositoryId, @RequestParam String path) {
+        return ResponseEntity.ok(ApiResponse.success(graphService.getDependencies(repositoryId, path)));
+    }
+
+    @GetMapping("/repositories/{repositoryId}/dependents")
+    public ResponseEntity<ApiResponse<java.util.List<RepositoryGraphResponse.FileResponse>>> getDependents(
+            @PathVariable String repositoryId, @RequestParam String path) {
+        return ResponseEntity.ok(ApiResponse.success(graphService.getDependents(repositoryId, path)));
+    }
+
+    @PostMapping("/repositories/{repositoryId}/ingest-parsed")
+    public ResponseEntity<ApiResponse<RepositoryGraphResponse>> ingestParsed(
+            @PathVariable String repositoryId, @RequestBody IngestParsedFilesRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(graphService.ingestParsedFiles(repositoryId, request)));
+    }
 }
