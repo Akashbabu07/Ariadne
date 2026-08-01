@@ -77,12 +77,13 @@ def clone_and_walk(git_url: str):
                 line_count = raw.count(b"\n") + 1
 
                 imports = extract_imports(raw, language)
-
+                content = raw.decode("utf-8", "ignore")[:8000]
                 files.append({
                     "path": rel_path.replace("\\", "/"),
                     "language": language,
                     "line_count": line_count,
                     "imports": imports,
+                     "content": content,
                 })
         return files
     finally:
@@ -102,6 +103,7 @@ class ParserServiceServicer(parser_pb2_grpc.ParserServiceServicer):
             parser_pb2.ParsedFile(
                 path=f["path"], language=f["language"],
                 line_count=f["line_count"], imports=f["imports"],
+                content=f["content"],
             )
             for f in parsed
         ]
