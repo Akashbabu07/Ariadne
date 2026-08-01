@@ -13,11 +13,16 @@ grpc:
       address: static://localhost:50051
       negotiation-type: plaintext
 
+
 services:
   graph-service:
     url: http://localhost:8085
   search-service:
     url: http://localhost:8086
+  rag-service:
+    url: http://localhost:8000
+  reasoning-service:
+    url: http://localhost:8001
 
 management:
   endpoints:
