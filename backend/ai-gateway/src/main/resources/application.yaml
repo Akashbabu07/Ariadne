@@ -16,6 +16,8 @@ grpc:
 services:
   graph-service:
     url: http://localhost:8085
+  search-service:
+    url: http://localhost:8086
 
 management:
   endpoints:

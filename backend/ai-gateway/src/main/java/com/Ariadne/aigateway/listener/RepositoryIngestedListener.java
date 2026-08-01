@@ -2,6 +2,7 @@ package com.Ariadne.aigateway.listener;
 
 import com.Ariadne.aigateway.client.GraphServiceClient;
 import com.Ariadne.aigateway.client.ParserClient;
+import com.Ariadne.aigateway.client.SearchServiceClient;
 import com.Ariadne.grpc.parser.ParseResponse;
 import com.Ariadne.shared.events.DependenciesExtractedEvent;
 import com.Ariadne.shared.events.RepositoryIngestedEvent;
@@ -24,26 +25,29 @@ public class RepositoryIngestedListener {
     private static final String PARSED_TOPIC = "repository.parsed";
     private static final String DEPENDENCIES_TOPIC = "repository.dependencies-extracted";
 
+    private final SearchServiceClient searchServiceClient;
     private final ParserClient parserClient;
     private final GraphServiceClient graphServiceClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @KafkaListener(topics = "repository.ingested", groupId = "ai-gateway")
-    public void onRepositoryIngested(RepositoryIngestedEvent event) {
-        UUID repositoryId = event.repositoryId();
-        try {
-            ParseResponse parseResult = parserClient.parseRepository(repositoryId.toString(), event.gitUrl());
-            publishParsed(repositoryId, event.gitUrl(), parseResult.getFilesCount());
+@KafkaListener(topics = "repository.ingested", groupId = "ai-gateway")
+public void onRepositoryIngested(RepositoryIngestedEvent event) {
+    UUID repositoryId = event.repositoryId();
+    try {
+        ParseResponse parseResult = parserClient.parseRepository(repositoryId.toString(), event.gitUrl());
+        publishParsed(repositoryId, event.gitUrl(), parseResult.getFilesCount());
 
-            int edgeCount = graphServiceClient.pushParsedFiles(repositoryId.toString(), event.gitUrl(), parseResult);
-            publishDependenciesExtracted(repositoryId, edgeCount);
+        int edgeCount = graphServiceClient.pushParsedFiles(repositoryId.toString(), event.gitUrl(), parseResult);
+        publishDependenciesExtracted(repositoryId, edgeCount);
 
-            log.info("Auto-parsed and pushed graph for repository {} ({} files)",
-                    repositoryId, parseResult.getFilesCount());
-        } catch (Exception e) {
-            log.warn("Auto-parse failed for repository {}: {}", repositoryId, e.getMessage());
-        }
+        searchServiceClient.pushParsedFiles(repositoryId.toString(), event.gitUrl(), parseResult);
+
+        log.info("Auto-parsed, indexed, and pushed graph for repository {} ({} files)",
+                repositoryId, parseResult.getFilesCount());
+    } catch (Exception e) {
+        log.warn("Auto-parse failed for repository {}: {}", repositoryId, e.getMessage());
     }
+}
 
     private void publishParsed(UUID repositoryId, String gitUrl, int filesParsed) {
         kafkaTemplate.send(PARSED_TOPIC, repositoryId.toString(),
