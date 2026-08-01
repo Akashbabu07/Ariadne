@@ -119,4 +119,22 @@ public class GraphService {
                         .toList()
         );
     }
+
+    public List<RepositoryGraphResponse.FileResponse> getTransitiveDependencies(String repositoryId, String path) {
+        return fileNodeRepository.findTransitiveDependencies(repositoryId, path).stream()
+                .map(this::toFileResponse)
+                .toList();
+    }
+
+    public List<RepositoryGraphResponse.FileResponse> getTransitiveDependents(String repositoryId, String path) {
+        return fileNodeRepository.findTransitiveDependents(repositoryId, path).stream()
+                .map(this::toFileResponse)
+                .toList();
+    }
+
+    public List<FileMetricsResponse> getFileMetrics(String repositoryId) {
+        return fileNodeRepository.findFileMetrics(repositoryId).stream()
+                .map(p -> new FileMetricsResponse(p.getPath(), p.getLanguage(), p.getFanIn(), p.getFanOut()))
+                .toList();
+    }
 }
