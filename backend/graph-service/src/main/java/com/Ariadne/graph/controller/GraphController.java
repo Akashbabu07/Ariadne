@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/graph")
 @RequiredArgsConstructor
@@ -53,5 +55,16 @@ public class GraphController {
     public ResponseEntity<ApiResponse<RepositoryGraphResponse>> ingestParsed(
             @PathVariable String repositoryId, @RequestBody IngestParsedFilesRequest request) {
         return ResponseEntity.ok(ApiResponse.success(graphService.ingestParsedFiles(repositoryId, request)));
+    }
+
+    @GetMapping("/repositories/{repositoryId}/impact")
+    public ResponseEntity<ApiResponse<List<RepositoryGraphResponse.FileResponse>>> getImpact(
+            @PathVariable String repositoryId, @RequestParam String path) {
+        return ResponseEntity.ok(ApiResponse.success(graphService.getTransitiveDependents(repositoryId, path)));
+    }
+
+    @GetMapping("/repositories/{repositoryId}/metrics")
+    public ResponseEntity<ApiResponse<List<FileMetricsResponse>>> getMetrics(@PathVariable String repositoryId) {
+        return ResponseEntity.ok(ApiResponse.success(graphService.getFileMetrics(repositoryId)));
     }
 }
