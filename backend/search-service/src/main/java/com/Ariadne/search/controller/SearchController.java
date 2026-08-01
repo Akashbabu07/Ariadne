@@ -36,11 +36,6 @@ public class SearchController {
         searchService.indexParsedFiles(repositoryId, gitUrl, request.files());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
-
-    @GetMapping("/hybrid")
-    public ResponseEntity<ApiResponse<List<SearchResultResponse>>> hybridSearch(@RequestParam String q) {
-        return ResponseEntity.ok(ApiResponse.success(searchService.hybridSearch(q)));
-    }
     @GetMapping("/hybrid")
     public ResponseEntity<ApiResponse<List<SearchResultResponse>>> hybridSearch(
             @RequestParam String q,

@@ -8,7 +8,9 @@ from git import Repo
 from tree_sitter import Language, Parser
 import tree_sitter_python as tspython
 import tree_sitter_javascript as tsjavascript
-
+import tree_sitter_java as tsjava
+import tree_sitter_go as tsgo
+import tree_sitter_rust as tsrust
 import parser_pb2
 import parser_pb2_grpc
 
@@ -21,10 +23,15 @@ IGNORED_DIRS = {".git", "node_modules", "target", "venv", "__pycache__", "dist",
 
 PY_LANGUAGE = Language(tspython.language())
 JS_LANGUAGE = Language(tsjavascript.language())
+JAVA_LANGUAGE = Language(tsjava.language())
+GO_LANGUAGE = Language(tsgo.language())
+RUST_LANGUAGE = Language(tsrust.language())
 
 _py_parser = Parser(PY_LANGUAGE)
 _js_parser = Parser(JS_LANGUAGE)
-
+_java_parser = Parser(JAVA_LANGUAGE)
+_go_parser = Parser(GO_LANGUAGE)
+_rust_parser = Parser(RUST_LANGUAGE)
 
 _PY_IMPORT_QUERY = PY_LANGUAGE.query("""
 (import_statement (dotted_name) @import)
@@ -39,6 +46,20 @@ _JS_IMPORT_QUERY = JS_LANGUAGE.query("""
   (#eq? @fn "require"))
 """)
 
+_JAVA_IMPORT_QUERY = JAVA_LANGUAGE.query("""
+(import_declaration (scoped_identifier) @import)
+(import_declaration (identifier) @import)
+""")
+
+_GO_IMPORT_QUERY = GO_LANGUAGE.query("""
+(import_spec path: (interpreted_string_literal) @import)
+""")
+
+_RUST_USE_QUERY = RUST_LANGUAGE.query("""
+(use_declaration) @import
+""")
+
+
 
 def extract_imports(source_bytes: bytes, language: str) -> list[str]:
     try:
@@ -47,11 +68,35 @@ def extract_imports(source_bytes: bytes, language: str) -> list[str]:
             captures = _PY_IMPORT_QUERY.captures(tree.root_node)
             nodes = captures.get("import", [])
             return sorted({source_bytes[n.start_byte:n.end_byte].decode("utf-8", "ignore") for n in nodes})
+
         if language in ("javascript", "typescript"):
             tree = _js_parser.parse(source_bytes)
             captures = _JS_IMPORT_QUERY.captures(tree.root_node)
             nodes = captures.get("import", [])
             return sorted({source_bytes[n.start_byte:n.end_byte].decode("utf-8", "ignore") for n in nodes})
+
+        if language == "java":
+            tree = _java_parser.parse(source_bytes)
+            captures = _JAVA_IMPORT_QUERY.captures(tree.root_node)
+            nodes = captures.get("import", [])
+            return sorted({source_bytes[n.start_byte:n.end_byte].decode("utf-8", "ignore") for n in nodes})
+
+        if language == "go":
+            tree = _go_parser.parse(source_bytes)
+            captures = _GO_IMPORT_QUERY.captures(tree.root_node)
+            nodes = captures.get("import", [])
+
+            return sorted({
+                source_bytes[n.start_byte:n.end_byte].decode("utf-8", "ignore").strip('"')
+                for n in nodes
+            })
+
+        if language == "rust":
+            tree = _rust_parser.parse(source_bytes)
+            captures = _RUST_USE_QUERY.captures(tree.root_node)
+            nodes = captures.get("import", [])
+            return sorted({source_bytes[n.start_byte:n.end_byte].decode("utf-8", "ignore").rstrip(";") for n in nodes})
+
     except Exception:
         return []
     return []

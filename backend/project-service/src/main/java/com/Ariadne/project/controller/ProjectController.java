@@ -74,4 +74,14 @@ public class ProjectController {
             @PathVariable UUID repositoryId, @RequestParam com.Ariadne.project.entity.SyncStatus status) {
         return ResponseEntity.ok(ApiResponse.success(projectService.markRepositorySynced(repositoryId, status)));
     }
+
+    @GetMapping("/repositories/{repositoryId}")
+    public ResponseEntity<ApiResponse<RepositoryResponse>> getRepository(@PathVariable UUID repositoryId) {
+        return ResponseEntity.ok(ApiResponse.success(projectService.getRepository(repositoryId)));
+    }
+
+    @GetMapping("/repositories/by-git-url")
+    public ResponseEntity<ApiResponse<RepositoryResponse>> getRepositoryByGitUrl(@RequestParam String gitUrl) {
+        return ResponseEntity.ok(ApiResponse.success(projectService.getRepositoryByGitUrl(gitUrl)));
+    }
 }

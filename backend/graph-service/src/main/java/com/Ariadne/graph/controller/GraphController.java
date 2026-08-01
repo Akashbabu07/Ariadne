@@ -52,7 +52,7 @@ public class GraphController {
     }
 
     @PostMapping("/repositories/{repositoryId}/ingest-parsed")
-    public ResponseEntity<ApiResponse<RepositoryGraphResponse>> ingestParsed(
+    public ResponseEntity<ApiResponse<Integer>> ingestParsed(
             @PathVariable String repositoryId, @RequestBody IngestParsedFilesRequest request) {
         return ResponseEntity.ok(ApiResponse.success(graphService.ingestParsedFiles(repositoryId, request)));
     }

@@ -1,6 +1,7 @@
 package com.Ariadne.analysis.service;
 
 import com.Ariadne.analysis.client.GraphServiceClient;
+import com.Ariadne.analysis.client.ProjectServiceClient;
 import com.Ariadne.analysis.client.ReasoningServiceClient;
 import com.Ariadne.analysis.dto.*;
 import com.Ariadne.analysis.entity.AnalysisReport;
@@ -12,23 +13,23 @@ import com.Ariadne.analysis.repository.DriftReportRepository;
 import com.Ariadne.analysis.repository.FileMetricSnapshotRepository;
 import com.Ariadne.analysis.repository.ImpactAnalysisReportRepository;
 import com.Ariadne.shared.events.AnalysisCompletedEvent;
+import com.Ariadne.shared.events.DriftDetectedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AnalysisService {
-
+    private static final Logger log = LoggerFactory.getLogger(AnalysisService.class);
     private static final String TOPIC = "analysis.completed";
 
     private final GraphServiceClient graphServiceClient;
@@ -39,6 +40,7 @@ public class AnalysisService {
     private final FileMetricSnapshotRepository fileMetricSnapshotRepository;
     private final ReasoningServiceClient reasoningServiceClient;
     private final ObjectMapper objectMapper;
+    private final ProjectServiceClient projectServiceClient;
 
     @Transactional
     public AnalysisReportResponse runBasicAnalysis(UUID repositoryId) {
@@ -92,7 +94,7 @@ public class AnalysisService {
         List<DriftedFile> drifted = new ArrayList<>();
         for (FileMetricsResponse f : current) {
             FileMetricSnapshot prev = previousByPath.get(f.path());
-            if (prev == null) continue; // new file since last run — nothing to diff against yet
+            if (prev == null) continue;
 
             int fanInDelta = (int) f.fanIn() - prev.getFanIn();
             int fanOutDelta = (int) f.fanOut() - prev.getFanOut();
@@ -115,6 +117,9 @@ public class AnalysisService {
             explanation = reasoningServiceClient
                     .reason(repositoryId, "drift_explanation", query, null, List.of(), List.of())
                     .answer();
+
+            kafkaTemplate.send("repository.drift-detected", repositoryId.toString(),
+                    new DriftDetectedEvent(repositoryId, drifted.size(), explanation, Instant.now()));
         }
 
         DriftReport report = DriftReport.builder()
@@ -139,5 +144,42 @@ public class AnalysisService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize analysis result", e);
         }
+    }
+
+    public RepositoryHealthResponse getRepositoryHealth(UUID repositoryId) {
+        RepositoryStatusResponse repoStatus = projectServiceClient.getRepository(repositoryId.toString()).data();
+
+        AnalysisReport latestAnalysis = reportRepository.findByRepositoryId(repositoryId).stream()
+                .max(Comparator.comparing(AnalysisReport::getCreatedAt))
+                .orElse(null);
+
+        long dependencyEdgeCount = graphServiceClient.getFileMetrics(repositoryId.toString()).data().stream()
+                .mapToLong(FileMetricsResponse::fanOut) // sum of fan-out = total edges, counted once per edge
+                .sum();
+
+        DriftReport latestDrift = driftReportRepository.findByRepositoryId(repositoryId).stream()
+                .max(Comparator.comparing(DriftReport::getCreatedAt))
+                .orElse(null);
+
+        int driftedFileCount = 0;
+        if (latestDrift != null) {
+            try {
+                driftedFileCount = objectMapper.readValue(latestDrift.getDriftedFilesJson(), DriftedFile[].class).length;
+            } catch (Exception e) {
+                log.warn("Failed to parse drifted files for repository {}: {}", repositoryId, e.getMessage());
+            }
+        }
+
+        return new RepositoryHealthResponse(
+                repositoryId,
+                repoStatus.syncStatus(),
+                repoStatus.lastSyncedAt(),
+                latestAnalysis != null ? latestAnalysis.getFileCount() : 0,
+                dependencyEdgeCount,
+                latestAnalysis != null ? latestAnalysis.getCreatedAt() : null,
+                driftedFileCount > 0,
+                driftedFileCount,
+                latestDrift != null ? latestDrift.getCreatedAt() : null
+        );
     }
 }
