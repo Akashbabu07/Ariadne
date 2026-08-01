@@ -2,9 +2,11 @@ package com.Ariadne.aigateway.client;
 
 import com.Ariadne.grpc.parser.ParseResponse;
 import com.Ariadne.shared.events.GraphUpdatedEvent;
+import com.Ariadne.shared.response.ApiEnvelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -38,20 +40,18 @@ public class GraphServiceClient {
 
         List<Map<String, Object>> files = parseResult.getFilesList().stream()
                 .map(f -> Map.<String, Object>of(
-                        "path", f.getPath(),
-                        "language", f.getLanguage(),
-                        "imports", f.getImportsList()
-                ))
+                        "path", f.getPath(), "language", f.getLanguage(), "imports", f.getImportsList()))
                 .toList();
 
-        restClient.post()
+        ApiEnvelope<Integer> response = restClient.post()
                 .uri(graphServiceUrl + "/api/v1/graph/repositories/{id}/ingest-parsed", repositoryId)
                 .body(Map.of("files", files))
                 .retrieve()
-                .toBodilessEntity();
+                .body(new ParameterizedTypeReference<ApiEnvelope<Integer>>() {});
 
         kafkaTemplate.send("graph.updated", repositoryId,
                 new GraphUpdatedEvent(UUID.fromString(repositoryId), parseResult.getFilesCount(), Instant.now()));
-        return 0;
+
+        return response != null && response.data() != null ? response.data() : 0;
     }
 }

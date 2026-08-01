@@ -3,6 +3,7 @@ package com.Ariadne.analysis.controller;
 import com.Ariadne.analysis.dto.AnalysisReportResponse;
 import com.Ariadne.analysis.dto.DriftReportResponse;
 import com.Ariadne.analysis.dto.ImpactAnalysisReportResponse;
+import com.Ariadne.analysis.dto.RepositoryHealthResponse;
 import com.Ariadne.analysis.service.AnalysisService;
 import com.Ariadne.shared.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,10 @@ public class AnalysisController {
     public ResponseEntity<ApiResponse<DriftReportResponse>> drift(@PathVariable UUID repositoryId) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(analysisService.runDriftDetection(repositoryId)));
+    }
+
+    @GetMapping("/repositories/{repositoryId}/health")
+    public ResponseEntity<ApiResponse<RepositoryHealthResponse>> health(@PathVariable UUID repositoryId) {
+        return ResponseEntity.ok(ApiResponse.success(analysisService.getRepositoryHealth(repositoryId)));
     }
 }

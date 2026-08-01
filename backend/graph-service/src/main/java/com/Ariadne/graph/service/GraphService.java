@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +72,7 @@ public class GraphService {
 
 
     @Transactional
-    public RepositoryGraphResponse ingestParsedFiles(String repositoryId, IngestParsedFilesRequest request) {
+    public int  ingestParsedFiles(String repositoryId, IngestParsedFilesRequest request) {
         RepositoryNode node = repositoryNodeRepository.findById(repositoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Repository node not found in graph"));
 
@@ -83,22 +84,21 @@ public class GraphService {
         }
         repositoryNodeRepository.save(node);
 
+        int edgesCreated = 0;
         for (IngestParsedFilesRequest.ParsedFileEntry entry : request.files()) {
             if (entry.imports() == null) continue;
             for (String rawImport : entry.imports()) {
                 String lastSegment = lastSegment(rawImport);
                 if (lastSegment.isBlank()) continue;
 
-                fileNodeRepository.findByRepositoryIdAndPathSuffix(repositoryId, lastSegment)
-                        .ifPresent(target -> {
-                            if (!target.getPath().equals(entry.path())) {
-                                fileNodeRepository.addDependency(repositoryId, entry.path(), target.getPath());
-                            }
-                        });
+                Optional<FileNode> target = fileNodeRepository.findByRepositoryIdAndPathSuffix(repositoryId, lastSegment);
+                if (target.isPresent() && !target.get().getPath().equals(entry.path())) {
+                    fileNodeRepository.addDependency(repositoryId, entry.path(), target.get().getPath());
+                    edgesCreated++;
+                }
             }
         }
-
-        return getRepositoryGraph(repositoryId);
+        return edgesCreated;
     }
 
     private String lastSegment(String rawImport) {

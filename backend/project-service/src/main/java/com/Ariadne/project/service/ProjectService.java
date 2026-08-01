@@ -33,6 +33,12 @@ public class ProjectService {
         return toOrgResponse(org);
     }
 
+    public RepositoryResponse getRepositoryByGitUrl(String gitUrl) {
+        Repository repo = repositoryRepository.findByGitUrl(gitUrl)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository not found for gitUrl: " + gitUrl));
+        return toRepoResponse(repo);
+    }
+
     public OrganizationResponse getOrganization(UUID orgId) {
         return toOrgResponse(findOrg(orgId));
     }
@@ -152,5 +158,11 @@ public class ProjectService {
                 member.getId(), member.getOrganization().getId(),
                 member.getUserId(), member.getJoinedAt()
         );
+    }
+
+    public RepositoryResponse getRepository(UUID repositoryId) {
+        Repository repo = repositoryRepository.findById(repositoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
+        return toRepoResponse(repo);
     }
 }
