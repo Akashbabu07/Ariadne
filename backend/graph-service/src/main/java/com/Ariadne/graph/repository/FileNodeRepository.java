@@ -66,4 +66,11 @@ public interface FileNodeRepository extends Neo4jRepository<FileNode, Long> {
     RETURN f.path AS path, f.language AS language, count(DISTINCT in) AS fanIn, count(DISTINCT out) AS fanOut
     """)
     List<FileMetricsProjection> findFileMetrics(String repositoryId);
+
+
+    @Query("""
+    MATCH (:Repository {id: $repositoryId})-[:CONTAINS]->(f:File)-[:DEPENDS_ON]->(dep:File)
+    RETURN f.path AS from, dep.path AS to
+    """)
+    List<DependencyEdgeProjection> findAllEdges(String repositoryId);
 }

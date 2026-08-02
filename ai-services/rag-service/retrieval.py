@@ -1,20 +1,10 @@
 import os
 import httpx
 from typing import Optional
-from schemas import RetrievedChunk, GraphContex
-
-SEARCH_SERVICE_URL = os.getenv("SEARCH_SERVICE_URL", "http://localhost:8086")
-GRAPH_SERVICE_URL = os.getenv("GRAPH_SERVICE_URL", "http://localhost:8085")
-
-# retrieval.py
-import os
-import httpx
-from typing import Optional
 from schemas import RetrievedChunk, GraphContext
 
-SEARCH_SERVICE_URL = os.getenv("SEARCH_SERVICE_URL", "http://localhost:8086")
-GRAPH_SERVICE_URL = os.getenv("GRAPH_SERVICE_URL", "http://localhost:8085")
-
+SEARCH_SERVICE_URL = f"http://{os.getenv('SEARCH_SERVICE_HOST', 'localhost')}:{os.getenv('SEARCH_SERVICE_PORT', '8086')}"
+GRAPH_SERVICE_URL = f"http://{os.getenv('GRAPH_SERVICE_HOST', 'localhost')}:{os.getenv('GRAPH_SERVICE_PORT', '8085')}"
 
 async def fetch_hybrid_chunks(repository_id: str, query: str, limit: int = 8) -> list[RetrievedChunk]:
     async with httpx.AsyncClient(timeout=10.0) as client:

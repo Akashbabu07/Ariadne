@@ -67,4 +67,9 @@ public class GraphController {
     public ResponseEntity<ApiResponse<List<FileMetricsResponse>>> getMetrics(@PathVariable String repositoryId) {
         return ResponseEntity.ok(ApiResponse.success(graphService.getFileMetrics(repositoryId)));
     }
+
+    @GetMapping("/repositories/{repositoryId}/edges")
+    public ResponseEntity<ApiResponse<List<DependencyEdgeResponse>>> getEdges(@PathVariable String repositoryId) {
+        return ResponseEntity.ok(ApiResponse.success(graphService.getAllEdges(repositoryId)));
+    }
 }
