@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --ink: #12141c;
+    --surface: #1a1d29;
+    --line: #2b2f42;
+    --thread: #d9a441;
+    --fog: #8992ac;
+    --paper: #edeae2;
+    --risk: #db6b5e;
+    --safe: #6eaf8c;
+}
+
+/* Visible keyboard focus, everywhere — non-negotiable regardless of theme */
+:focus-visible {
+    outline: 2px solid var(--thread);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

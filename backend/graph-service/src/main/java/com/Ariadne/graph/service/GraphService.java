@@ -137,4 +137,10 @@ public class GraphService {
                 .map(p -> new FileMetricsResponse(p.getPath(), p.getLanguage(), p.getFanIn(), p.getFanOut()))
                 .toList();
     }
+
+    public List<DependencyEdgeResponse> getAllEdges(String repositoryId) {
+        return fileNodeRepository.findAllEdges(repositoryId).stream()
+                .map(e -> new DependencyEdgeResponse(e.getFrom(), e.getTo()))
+                .toList();
+    }
 }

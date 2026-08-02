@@ -1,0 +1,329 @@
+databases:
+  - name: ariadne-postgres
+    databaseName: atlas
+    user: atlas
+    plan: starter
+    postgresMajorVersion: "16"
+    ipAllowList: []
+
+services:
+  # ---------- Self-hosted Kafka (single-broker KRaft, same as local dev) ----------
+  - type: pserv
+    name: kafka
+    runtime: image
+    image: { url: apache/kafka:3.9.0 }
+    plan: starter
+    disk: { name: kafka-data, mountPath: /var/lib/kafka/data, sizeGB: 5 }
+    envVars:
+      - key: KAFKA_NODE_ID
+        value: "1"
+      - key: KAFKA_PROCESS_ROLES
+        value: broker,controller
+      - key: KAFKA_LISTENERS
+        value: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      - key: KAFKA_ADVERTISED_LISTENERS
+        value: "PLAINTEXT://kafka:9092"
+      - key: KAFKA_CONTROLLER_LISTENER_NAMES
+        value: CONTROLLER
+      - key: KAFKA_CONTROLLER_QUORUM_VOTERS
+        value: "1@localhost:9093"
+      - key: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+        value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      - key: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+        value: "1"
+
+  # ---------- Python AI services ----------
+  - type: web
+    name: parser-service
+    runtime: docker
+    dockerfilePath: ./ai-services/parser-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars: []
+
+  - type: web
+    name: embedding-service
+    runtime: docker
+    dockerfilePath: ./ai-services/embedding-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars: []
+
+  - type: web
+    name: rag-service
+    runtime: docker
+    dockerfilePath: ./ai-services/rag-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SEARCH_SERVICE_HOST
+        fromService: { type: web, name: search-service, property: host }
+      - key: SEARCH_SERVICE_PORT
+        fromService: { type: web, name: search-service, property: port }
+      - key: GRAPH_SERVICE_HOST
+        fromService: { type: web, name: graph-service, property: host }
+      - key: GRAPH_SERVICE_PORT
+        fromService: { type: web, name: graph-service, property: port }
+
+  - type: web
+    name: reasoning-service
+    runtime: docker
+    dockerfilePath: ./ai-services/reasoning-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: LLM_PROVIDER
+        value: anthropic
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-5
+
+  # ---------- Java backend services ----------
+  - type: web
+    name: auth-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: auth-service
+      - key: SERVICE_PORT
+        value: "8081"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase: { name: ariadne-postgres, property: connectionString }
+      - key: JWT_SECRET
+        sync: false
+
+  - type: web
+    name: project-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: project-service
+      - key: SERVICE_PORT
+        value: "8082"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase: { name: ariadne-postgres, property: connectionString }
+
+  - type: web
+    name: ingestion-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: ingestion-service
+      - key: SERVICE_PORT
+        value: "8083"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase: { name: ariadne-postgres, property: connectionString }
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        fromService: { type: pserv, name: kafka, property: hostport }
+      - key: SERVICES_PROJECT_SERVICE_HOST
+        fromService: { type: web, name: project-service, property: host }
+      - key: SERVICES_PROJECT_SERVICE_PORT
+        fromService: { type: web, name: project-service, property: port }
+
+  - type: web
+    name: knowledge-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: knowledge-service
+      - key: SERVICE_PORT
+        value: "8084"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase: { name: ariadne-postgres, property: connectionString }
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        fromService: { type: pserv, name: kafka, property: hostport }
+
+  - type: web
+    name: graph-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: graph-service
+      - key: SERVICE_PORT
+        value: "8085"
+      - key: SPRING_NEO4J_URI
+        sync: false          # Neo4j Aura connection string, e.g. neo4j+s://xxxx.databases.neo4j.io
+      - key: SPRING_NEO4J_AUTHENTICATION_USERNAME
+        sync: false
+      - key: SPRING_NEO4J_AUTHENTICATION_PASSWORD
+        sync: false
+
+  - type: web
+    name: search-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: search-service
+      - key: SERVICE_PORT
+        value: "8086"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase: { name: ariadne-postgres, property: connectionString }
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        fromService: { type: pserv, name: kafka, property: hostport }
+      - key: GRPC_CLIENT_EMBEDDING_SERVICE_HOST
+        fromService: { type: web, name: embedding-service, property: host }
+      - key: GRPC_CLIENT_EMBEDDING_SERVICE_PORT
+        fromService: { type: web, name: embedding-service, property: port }
+
+  - type: web
+    name: analysis-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: analysis-service
+      - key: SERVICE_PORT
+        value: "8087"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase: { name: ariadne-postgres, property: connectionString }
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        fromService: { type: pserv, name: kafka, property: hostport }
+      - key: SERVICES_GRAPH_SERVICE_HOST
+        fromService: { type: web, name: graph-service, property: host }
+      - key: SERVICES_GRAPH_SERVICE_PORT
+        fromService: { type: web, name: graph-service, property: port }
+      - key: SERVICES_REASONING_SERVICE_HOST
+        fromService: { type: web, name: reasoning-service, property: host }
+      - key: SERVICES_REASONING_SERVICE_PORT
+        fromService: { type: web, name: reasoning-service, property: port }
+      - key: SERVICES_PROJECT_SERVICE_HOST
+        fromService: { type: web, name: project-service, property: host }
+      - key: SERVICES_PROJECT_SERVICE_PORT
+        fromService: { type: web, name: project-service, property: port }
+
+  - type: web
+    name: ai-gateway
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: ai-gateway
+      - key: SERVICE_PORT
+        value: "8090"
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        fromService: { type: pserv, name: kafka, property: hostport }
+      - key: GRPC_CLIENT_PARSER_SERVICE_HOST
+        fromService: { type: web, name: parser-service, property: host }
+      - key: GRPC_CLIENT_PARSER_SERVICE_PORT
+        fromService: { type: web, name: parser-service, property: port }
+      - key: SERVICES_GRAPH_SERVICE_HOST
+        fromService: { type: web, name: graph-service, property: host }
+      - key: SERVICES_GRAPH_SERVICE_PORT
+        fromService: { type: web, name: graph-service, property: port }
+      - key: SERVICES_SEARCH_SERVICE_HOST
+        fromService: { type: web, name: search-service, property: host }
+      - key: SERVICES_SEARCH_SERVICE_PORT
+        fromService: { type: web, name: search-service, property: port }
+      - key: SERVICES_RAG_SERVICE_HOST
+        fromService: { type: web, name: rag-service, property: host }
+      - key: SERVICES_RAG_SERVICE_PORT
+        fromService: { type: web, name: rag-service, property: port }
+      - key: SERVICES_REASONING_SERVICE_HOST
+        fromService: { type: web, name: reasoning-service, property: host }
+      - key: SERVICES_REASONING_SERVICE_PORT
+        fromService: { type: web, name: reasoning-service, property: port }
+
+  - type: web
+    name: integration-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: integration-service
+      - key: SERVICE_PORT
+        value: "8091"
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        fromService: { type: pserv, name: kafka, property: hostport }
+      - key: SERVICES_PROJECT_SERVICE_HOST
+        fromService: { type: web, name: project-service, property: host }
+      - key: SERVICES_PROJECT_SERVICE_PORT
+        fromService: { type: web, name: project-service, property: port }
+      - key: SERVICES_INGESTION_SERVICE_HOST
+        fromService: { type: web, name: ingestion-service, property: host }
+      - key: SERVICES_INGESTION_SERVICE_PORT
+        fromService: { type: web, name: ingestion-service, property: port }
+      - key: INTEGRATION_GITHUB_WEBHOOK_SECRET
+        sync: false
+      - key: INTEGRATION_JIRA_BASE_URL
+        sync: false
+      - key: INTEGRATION_JIRA_EMAIL
+        sync: false
+      - key: INTEGRATION_JIRA_API_TOKEN
+        sync: false
+      - key: INTEGRATION_JIRA_PROJECT_KEY
+        sync: false
+
+  - type: web
+    name: scheduler-service
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: scheduler-service
+      - key: SERVICE_PORT
+        value: "8092"
+      - key: SERVICES_PROJECT_SERVICE_HOST
+        fromService: { type: web, name: project-service, property: host }
+      - key: SERVICES_PROJECT_SERVICE_PORT
+        fromService: { type: web, name: project-service, property: port }
+      - key: SERVICES_INGESTION_SERVICE_HOST
+        fromService: { type: web, name: ingestion-service, property: host }
+      - key: SERVICES_INGESTION_SERVICE_PORT
+        fromService: { type: web, name: ingestion-service, property: port }
+
+  - type: web
+    name: api-gateway
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile.service
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: SERVICE_DIR
+        value: api-gateway
+      - key: SERVICE_PORT
+        value: "8080"
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false   # set to your Vercel URL, e.g. https://ariadne.vercel.app
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_0_URI
+        fromService: { type: web, name: auth-service, property: hostport }
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_1_URI
+        fromService: { type: web, name: project-service, property: hostport }
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_2_URI
+        fromService: { type: web, name: search-service, property: hostport }
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_3_URI
+        fromService: { type: web, name: graph-service, property: hostport }
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_4_URI
+        fromService: { type: web, name: analysis-service, property: hostport }
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_5_URI
+        fromService: { type: web, name: ai-gateway, property: hostport }
+      - key: SPRING_CLOUD_GATEWAY_ROUTES_6_URI
+        fromService: { type: web, name: ingestion-service, property: hostport }

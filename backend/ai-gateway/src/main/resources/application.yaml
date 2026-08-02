@@ -10,19 +10,19 @@ server:
 grpc:
   client:
     parser-service:
-      address: static://localhost:50051
+      address: static://${GRPC_CLIENT_PARSER_SERVICE_HOST:localhost}:${GRPC_CLIENT_PARSER_SERVICE_PORT:50051}
       negotiation-type: plaintext
 
 
 services:
   graph-service:
-    url: http://localhost:8085
+    url: http://${SERVICES_GRAPH_SERVICE_HOST:localhost}:${SERVICES_GRAPH_SERVICE_PORT:8085}
   search-service:
-    url: http://localhost:8086
+    url: http://${SERVICES_SEARCH_SERVICE_HOST:localhost}:${SERVICES_SEARCH_SERVICE_PORT:8086}
   rag-service:
-    url: http://localhost:8000
+    url: http://${SERVICES_RAG_SERVICE_HOST:localhost}:${SERVICES_RAG_SERVICE_PORT:8000}
   reasoning-service:
-    url: http://localhost:8001
+    url: http://${SERVICES_REASONING_SERVICE_HOST:localhost}:${SERVICES_REASONING_SERVICE_PORT:8001}
 
 management:
   endpoints:
