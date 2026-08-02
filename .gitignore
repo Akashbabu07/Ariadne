@@ -45,3 +45,8 @@ logs/
 
 # Coverage
 coverage/
+
+
+# Python - generated gRPC stubs (regenerated from .proto files)
+*_pb2.py
+*_pb2_grpc.py

@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: ai-gateway
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8090
+
+grpc:
+  client:
+    parser-service:
+      address: static://localhost:50051
+      negotiation-type: plaintext
+
+
+services:
+  graph-service:
+    url: http://localhost:8085
+  search-service:
+    url: http://localhost:8086
+  rag-service:
+    url: http://localhost:8000
+  reasoning-service:
+    url: http://localhost:8001
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
