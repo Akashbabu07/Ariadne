@@ -1,7 +1,7 @@
 package com.Ariadne.project.controller;
 
 import com.Ariadne.project.dto.*;
-import com.Ariadne.project.service.ProjectService;
+import com.Ariadne.project.ProjectService;
 import com.Ariadne.shared.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 Verbamind Source-Available License
 
-Copyright (c) 2026 [YOUR NAME / COMPANY NAME]. All rights reserved.
+Copyright © 2026 AkashBabu07. All rights reserved.
 
 1. GRANT OF VIEWING RIGHTS
 
@@ -38,9 +38,9 @@ LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
 4. CONTACT
 
 For licensing inquiries, commercial use requests, or permission beyond
-the scope of this license, contact: [YOUR EMAIL]
+the scope of this license, contact: ab525125625@gmail.com
 
 5. GOVERNING LAW
 
-This license shall be governed by the laws of [YOUR COUNTRY/STATE],
+This license shall be governed by the laws of India,
 without regard to its conflict of laws principles.

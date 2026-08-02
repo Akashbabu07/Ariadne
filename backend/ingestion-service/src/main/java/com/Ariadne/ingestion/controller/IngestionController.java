@@ -1,7 +1,7 @@
 package com.Ariadne.ingestion.controller;
 
 import com.Ariadne.ingestion.dto.*;
-import com.Ariadne.ingestion.service.IngestionService;
+import com.Ariadne.ingestion.IngestionService;
 import com.Ariadne.shared.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

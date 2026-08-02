@@ -88,5 +88,3 @@ volumes:
   atlas_postgres_data:
   atlas_neo4j_data:
   atlas_grafana_data:
-
-

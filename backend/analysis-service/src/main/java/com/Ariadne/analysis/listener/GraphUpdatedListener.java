@@ -1,6 +1,6 @@
 package com.Ariadne.analysis.listener;
 
-import com.Ariadne.analysis.service.AnalysisService;
+import com.Ariadne.AnalysisService;
 import com.Ariadne.shared.events.GraphUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
