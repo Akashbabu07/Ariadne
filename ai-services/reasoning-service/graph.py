@@ -1,28 +1,11 @@
-import os
-from typing import TypeDict,List
-from langgraph.graph import StateGraph,End
-from langchain_ollama import ChatOllama
+from typing import TypedDict, List
+from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
 from prompts import system_prompt_for
+from llm_provider import build_llm
 
+_llm = build_llm()
 
-OLLAMA_BASE_URL = os.getenv(
-    "OLLAMA_BASE_URL",
-    "http://localhost:11434"
-)
-
-
-OLLAMA_MODEL = os.getenv(
-    "OLLAMA_MODEL",
-    "llama3.2:3b"
-)
-
-
-_llm = ChatOllama(
-    base_url=OLLAMA_BASE_URL,
-    model=OLLAMA_MODEL,
-    temperature=0.1
-)
 
 class ReasoningState(TypedDict):
     mode: str
@@ -34,8 +17,6 @@ class ReasoningState(TypedDict):
     retry_count: int
 
 
-
-
 def generate_node(state: ReasoningState) -> ReasoningState:
     messages = [
         SystemMessage(content=system_prompt_for(state["mode"])),
@@ -45,17 +26,16 @@ def generate_node(state: ReasoningState) -> ReasoningState:
     return {**state, "answer": response.content}
 
 
-
 def extract_sources_node(state: ReasoningState) -> ReasoningState:
-
     cited = [path for path in state["available_sources"] if path in state["answer"]]
     return {**state, "cited_sources": cited}
 
-def should_retry(state: ReasoningState) -> str:
 
+def should_retry(state: ReasoningState) -> str:
     if not state["cited_sources"] and state["available_sources"] and state["retry_count"] < 1:
         return "retry"
     return "done"
+
 
 def retry_generate_node(state: ReasoningState) -> ReasoningState:
     messages = [
@@ -68,6 +48,7 @@ def retry_generate_node(state: ReasoningState) -> ReasoningState:
     ]
     response = _llm.invoke(messages)
     return {**state, "answer": response.content, "retry_count": state["retry_count"] + 1}
+
 
 def build_graph():
     graph = StateGraph(ReasoningState)
@@ -87,6 +68,7 @@ def build_graph():
 
 
 _compiled_graph = build_graph()
+
 
 def run_reasoning(mode: str, query: str, context_text: str, available_sources: List[str]) -> dict:
     initial_state: ReasoningState = {

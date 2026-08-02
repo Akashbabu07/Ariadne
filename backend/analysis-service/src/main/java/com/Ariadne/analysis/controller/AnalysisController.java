@@ -4,7 +4,7 @@ import com.Ariadne.analysis.dto.AnalysisReportResponse;
 import com.Ariadne.analysis.dto.DriftReportResponse;
 import com.Ariadne.analysis.dto.ImpactAnalysisReportResponse;
 import com.Ariadne.analysis.dto.RepositoryHealthResponse;
-import com.Ariadne.analysis.service.AnalysisService;
+import com.Ariadne.AnalysisService;
 import com.Ariadne.shared.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

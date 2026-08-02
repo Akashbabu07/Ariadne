@@ -1,4 +1,4 @@
-package com.Ariadne.ingestion.service;
+package com.Ariadne.ingestion;
 
 import com.Ariadne.ingestion.client.ProjectServiceClient;
 import com.Ariadne.ingestion.dto.*;

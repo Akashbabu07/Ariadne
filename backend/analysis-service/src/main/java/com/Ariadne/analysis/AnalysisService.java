@@ -1,8 +1,9 @@
-package com.Ariadne.analysis.service;
+package com.Ariadne.analysis;
 
 import com.Ariadne.analysis.client.GraphServiceClient;
 import com.Ariadne.analysis.client.ProjectServiceClient;
 import com.Ariadne.analysis.client.ReasoningServiceClient;
+import com.Ariadne.analysis.dto.*;
 import com.Ariadne.analysis.dto.*;
 import com.Ariadne.analysis.entity.AnalysisReport;
 import com.Ariadne.analysis.entity.DriftReport;

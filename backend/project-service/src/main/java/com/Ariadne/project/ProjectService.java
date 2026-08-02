@@ -1,4 +1,4 @@
-package com.Ariadne.project.service;
+package com.Ariadne.project;
 
 import com.Ariadne.project.dto.*;
 import com.Ariadne.project.entity.*;
