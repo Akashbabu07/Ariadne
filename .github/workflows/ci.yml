@@ -98,13 +98,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio
+          pip install -r requirements.txt --verbose
+          pip install pytest --verbose
+
+      - name: Generate protobuf files (parser-service only)
+        if: matrix.service == 'parser-service'
+        run: |
+          python -m grpc_tools.protoc -I proto --python_out=. --grpc_python_out=. proto/parser.proto
 
       - name: Run tests
         run: |
           if [ -d tests ]; then
-            pytest -q
+            python -m pytest -q
           else
             echo "No tests/ directory for ${{ matrix.service }} yet — skipping."
           fi

@@ -1,3 +1,5 @@
 grpcio==1.68.1
 grpcio-tools==1.68.1
 sentence-transformers==3.3.1
+
+pytest>=7.0
