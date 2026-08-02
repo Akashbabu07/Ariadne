@@ -16,7 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Disabled("Temporarily disabled while fixing Flyway/Testcontainers configuration")
+
 @SpringBootTest
 @Testcontainers
 class FlywayMigrationIntegrationTest {
