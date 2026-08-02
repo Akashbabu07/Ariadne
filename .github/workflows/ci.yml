@@ -101,6 +101,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
 
+      - name: Generate protobuf files (parser-service only)
+        if: matrix.service == 'parser-service'
+        run: |
+          python -m grpc_tools.protoc -I proto --python_out=. --grpc_python_out=. proto/parser.proto
+
       - name: Run tests
         run: |
           if [ -d tests ]; then
