@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.Ariadne</groupId>
 	<artifactId>integration-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>integration-service</name>
 	<description/>
 	<url/>
