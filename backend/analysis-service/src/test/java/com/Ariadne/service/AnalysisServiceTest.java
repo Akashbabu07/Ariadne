@@ -2,21 +2,21 @@ package com.Ariadne.service;
 
 
 
-import com.Ariadne.AnalysisService;
-import com.Ariadne.client.GraphServiceClient;
-import com.Ariadne.client.ProjectServiceClient;
-import com.Ariadne.client.ReasoningServiceClient;
+import com.Ariadne.analysis.AnalysisService;
+import com.Ariadne.analysis.client.GraphServiceClient;
+import com.Ariadne.analysis.client.ProjectServiceClient;
+import com.Ariadne.analysis.client.ReasoningServiceClient;
 import com.Ariadne.analysis.dto.*;
 import com.Ariadne.analysis.entity.*;
 import com.Ariadne.analysis.repository.*;
-import com.Ariadne.dto.*;
-import com.Ariadne.entity.DriftReport;
-import com.Ariadne.entity.FileMetricSnapshot;
-import com.Ariadne.entity.ImpactAnalysisReport;
-import com.Ariadne.repository.AnalysisReportRepository;
-import com.Ariadne.repository.DriftReportRepository;
-import com.Ariadne.repository.FileMetricSnapshotRepository;
-import com.Ariadne.repository.ImpactAnalysisReportRepository;
+import com.Ariadne.analysis.dto.*;
+import com.Ariadne.analysis.entity.DriftReport;
+import com.Ariadne.analysis.entity.FileMetricSnapshot;
+import com.Ariadne.analysis.entity.ImpactAnalysisReport;
+import com.Ariadne.analysis.repository.AnalysisReportRepository;
+import com.Ariadne.analysis.repository.DriftReportRepository;
+import com.Ariadne.analysis.repository.FileMetricSnapshotRepository;
+import com.Ariadne.analysis.repository.ImpactAnalysisReportRepository;
 import com.Ariadne.shared.events.DriftDetectedEvent;
 import com.Ariadne.shared.response.ApiEnvelope;
 import com.fasterxml.jackson.databind.ObjectMapper;
