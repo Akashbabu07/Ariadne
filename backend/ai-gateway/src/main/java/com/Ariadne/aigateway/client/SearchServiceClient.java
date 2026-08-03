@@ -26,7 +26,7 @@ public class SearchServiceClient {
                 ))
                 .toList();
 
-        String uri = UriComponentsBuilder.fromHttpUrl(searchServiceUrl + "/api/v1/search/repositories/{id}/ingest-parsed")
+        String uri = UriComponentsBuilder.fromUriString(searchServiceUrl + "/api/v1/search/repositories/{id}/ingest-parsed")
                 .queryParam("gitUrl", gitUrl)
                 .buildAndExpand(repositoryId)
                 .toUriString();
