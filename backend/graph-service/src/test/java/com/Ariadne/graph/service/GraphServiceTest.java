@@ -90,7 +90,6 @@ public class GraphServiceTest {
         RepositoryNode node = RepositoryNode.builder().id(repositoryId).gitUrl("https://x").build();
         when(repositoryNodeRepository.findById(repositoryId)).thenReturn(Optional.of(node));
         when(repositoryNodeRepository.save(any())).thenReturn(node);
-        when(fileNodeRepository.findByRepositoryIdAndPathSuffix(anyString(), anyString())).thenReturn(Optional.empty());
 
         var entry = new IngestParsedFilesRequest.ParsedFileEntry("src/main/New.java", "java", List.of());
 

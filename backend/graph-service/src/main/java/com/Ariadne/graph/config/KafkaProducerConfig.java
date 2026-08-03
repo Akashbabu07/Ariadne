@@ -1,4 +1,4 @@
-// TECH: Spring Kafka producer config — same pattern as ingestion-service's KafkaProducerConfig, copied here
+
 package com.Ariadne.graph.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
